@@ -6,6 +6,7 @@ interface User {
   name: string;
   shortBio: string;
   isVerified: boolean;
+  imageUrl: string;
 }
 
 interface UserData {
@@ -23,6 +24,7 @@ const GET_ROCKET_INVENTORY = gql`
       name
       shortBio
       isVerified
+      imageUrl
     }
   }
 `;
@@ -43,6 +45,7 @@ export function UserList() {
               <tr>
                 <th>Name</th>
                 <th>ShortBio</th>
+                <th>Image</th>
               </tr>
             </thead>
             <tbody>
@@ -50,6 +53,7 @@ export function UserList() {
                 <tr>
                   <td>{user.name}</td>
                   <td>{user.shortBio}</td>
+                  <td><img src={user.imageUrl} alt=""/></td>
                 </tr>
               ))}
             </tbody>
