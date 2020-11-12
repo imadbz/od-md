@@ -5,17 +5,17 @@
   "scripts": {
     "start": "nodemon -w src --ext ts --exec ts-node src/index.ts",
     "seeds": "ts-node src/db/seeds.ts",
-    "migration:gen": "ts-node ./node_modules/.bin/typeorm migration:generate",
-    "migration:run": "ts-node ./node_modules/.bin/typeorm migration:run"
+    "torm": "node --require ts-node/register ./node_modules/typeorm/cli.js",
+    "migration:gen": "yarn torm migration:generate",
+    "migration:run": "yarn torm migration:run"
   },
   "dependencies": {
-    "graphql": "^14.1.1",
     "apollo-server": "^2.9.16",
+    "graphql": "^14.1.1",
+    "node-gyp": "^3.0",
     "reflect-metadata": "^0.1.13",
     "sqlite3": "^5.0.0",
-    "type-graphql": "^0.17.6",
-    "typeorm": "^0.2.22",
-    "node-gyp": "^3.0"
+    "type-graphql": "^0.17.6"
   },
   "devDependencies": {
     "nodemon": "^2.0.2",

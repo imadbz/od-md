@@ -4,10 +4,8 @@
   "database": "database.sqlite",
   "entities": ["./src/entities/*.ts"],
   "migrations": ["./src/migrations/*.ts"],
-  "synchronize": true,
   "cli": {
     "entitiesDir": "./src/entities",
     "migrationsDir": "src/migrations"
   }
 }
-

@@ -19,4 +19,8 @@ export class User extends BaseEntity {
   @Field(() => Boolean)
   @Column({ default: false })
   isVerified: boolean;
+
+  @Field(() => String)
+  @Column()
+  imageUrl: string;
 }
