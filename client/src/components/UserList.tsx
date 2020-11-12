@@ -50,7 +50,7 @@ export function UserList() {
             </thead>
             <tbody>
               {data && data.Users.map(user => (
-                <tr>
+                <tr key={user.id}>
                   <td>{user.name}</td>
                   <td>{user.shortBio}</td>
                   <td><img src={user.imageUrl} alt=""/></td>
