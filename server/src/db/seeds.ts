@@ -1,11 +1,13 @@
 import { connectDatabase } from "./index";
+import { getConnection } from 'typeorm'
+import faker from 'faker';
+import { User } from "../entities/User";
 
-const users = [
-  { id: 1, name: "Testov Testovic", shortBio: "I was born.", isVerified: false, imageUrl: 'https://i.pravatar.cc/300' },
-  { id: 2, name: "Abe Betov", shortBio: "I also born.", isVerified: false, imageUrl: 'https://i.pravatar.cc/300' },
-  { id: 3, name: "Cesar Julio", shortBio: "I later born.", isVerified: true, imageUrl: 'https://i.pravatar.cc/300' },
+const users = new Array(50).fill(null)
+  .map((user, index) =>
+    user = { name: `${faker.name.firstName()} ${faker.name.lastName()}`, shortBio: faker.lorem.words(7), isVerified: faker.random.boolean(), imageUrl: `https://i.pravatar.cc?u=${index}` }
+  )
 
-]
 const seed = async () => {
   try {
     console.log("[seed] : running...");
@@ -13,9 +15,13 @@ const seed = async () => {
     const db = await connectDatabase();
     db.users.clear();
 
-    await users.forEach(user => {
-      db.users.create(user).save();
-    });
+    // Todo: figure out Typeorm API to use `db` for bulk insert instead of creating connection here
+    await getConnection()
+      .createQueryBuilder()
+      .insert()
+      .into(User)
+      .values(users)
+      .execute();
 
     console.log("[seed] : success");
   } catch {
