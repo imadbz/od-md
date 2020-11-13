@@ -17,8 +17,14 @@ interface UserVars {
   name: string;
 }
 
+enum VerifiedStatus {
+  'ALL' = 0,
+  'VERIFIED' = 1,
+  'NONVERIFIED' = 2
+}
+
 const GET_ROCKET_INVENTORY = gql`
-  query GetUsers($offset: Float! = 0, $search: String, $verified: Boolean) {
+  query GetUsers($offset: Float, $search: String, $verified: Float) {
     Users(take: 20, skip: $offset, search: $search, verified: $verified) {
       id
       name
@@ -35,76 +41,49 @@ export function UserList() {
     {}
   );
 
-  const fetchMoreData = () => {
-    if(searchString || verified !== null) return;
+  const [searchString, setSearchString] = useState("");
+  const [verified, setVerified] = useState(VerifiedStatus.ALL);
 
+  const fetchData = (reset?: boolean) => {
     fetchMore({
       variables: {
-        offset: data?.Users.length
+        offset: reset || !data ? 0 : data?.Users.length,
+        search: searchString && `%${searchString}%`,
+        verified
       },
       updateQuery: (prev: UserData, { fetchMoreResult }) => {
+        if(reset) return fetchMoreResult || {Users: []};
+        
         if (!fetchMoreResult) return prev;
+        
         return Object.assign({}, prev, {
           Users: [...prev.Users, ...fetchMoreResult.Users]
         });
       }
     })
   }
-
-  const search = () => {
-    console.log(verified)
-    fetchMore({
-      variables: {
-        search: searchString && `%${searchString}%`,
-        verified
-      },
-      updateQuery: (prev: UserData, { fetchMoreResult }) => {
-        return fetchMoreResult || {Users: []};
-      }
-    })
-  }
-  
   
   const handleScroll = () => {
-    // http://stackoverflow.com/questions/9439725/javascript-how-to-detect-if-browser-window-is-scrolled-to-bottom
-    const scrollTop = (document.documentElement && document.documentElement.scrollTop) || document.body.scrollTop;
-    const scrollHeight = (document.documentElement && document.documentElement.scrollHeight) || document.body.scrollHeight;
-    const clientHeight = document.documentElement.clientHeight || window.innerHeight;
-    const scrolledToBottom = Math.ceil(scrollTop + clientHeight) >= scrollHeight;
-
-    if (scrolledToBottom) {
-      fetchMoreData();
+    if (Math.ceil(window.innerHeight + window.pageYOffset) >= document.body.offsetHeight) {
+      // todo: make sure it doesn't fire when graphql is retreiving data already
+      fetchData();
     }
   };
+
+  const handleSearchInputChange = (e: any) => {
+    setSearchString(e.target.value)
+  }
+
+  const handleVerifiedChange = (verified: VerifiedStatus) => {
+    setVerified(verified);
+  }
 
   useEffect(() => {
     window.addEventListener('scroll', handleScroll);
     return () => window.removeEventListener('scroll', handleScroll);
   })
 
-  
-  const [searchString, setSearchString] = useState("");
-  const [verified, setVerified] = useState(null as boolean | null);
-
-  const handleSearchInputChange = (e: any) => {
-    setSearchString(e.target.value)
-  }
-
-  const handleVerifiedChange = (verified: 'ALL'|'VERIFIED'|'NON-VERIFIED') => {
-    switch(verified) {
-      case 'VERIFIED':
-        setVerified(true)
-        break;
-      case 'NON-VERIFIED':
-        setVerified(false)
-        break;
-      default: 
-        setVerified(null);
-        break;
-    }
-  }
-
-  useEffect(search, [verified, searchString])
+  useEffect(() => fetchData(true), [verified, searchString])
 
 
   return (
@@ -112,10 +91,9 @@ export function UserList() {
       <h3>Users</h3>
       <input type="text" onChange={handleSearchInputChange}/>
       <div>
-        <a onClick={() => handleVerifiedChange('ALL')}>All</a>
-        <a onClick={() => handleVerifiedChange('VERIFIED')}>Verified only</a>
-        <a onClick={() => handleVerifiedChange('NON-VERIFIED')}>Non verified only</a>
-
+        <a onClick={() => handleVerifiedChange(VerifiedStatus.ALL)}>All</a>
+        <a onClick={() => handleVerifiedChange(VerifiedStatus.VERIFIED)}>Verified only</a>
+        <a onClick={() => handleVerifiedChange(VerifiedStatus.NONVERIFIED)}>Non verified only</a>
       </div>
       {loading ? (
         <p>Loading ...</p>
