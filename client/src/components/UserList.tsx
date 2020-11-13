@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { useQuery, gql } from '@apollo/client';
 
 interface User {
@@ -18,8 +18,8 @@ interface UserVars {
 }
 
 const GET_ROCKET_INVENTORY = gql`
-  query GetUsers {
-    Users {
+  query GetUsers($offset: Float! = 0) {
+    Users(take: 20, skip: $offset) {
       id
       name
       shortBio
@@ -30,10 +30,46 @@ const GET_ROCKET_INVENTORY = gql`
 `;
 
 export function UserList() {
-  const { loading, data } = useQuery<UserData, UserVars>(
+  const { loading, data, fetchMore } = useQuery<UserData, UserVars>(
     GET_ROCKET_INVENTORY,
     {}
   );
+
+  const fetchMoreData = () => {
+    fetchMore({
+      variables: {
+        offset: data?.Users.length
+      },
+      updateQuery: (prev: UserData, { fetchMoreResult }) => {
+        if (!fetchMoreResult) return prev;
+        return Object.assign({}, prev, {
+          Users: [...prev.Users, ...fetchMoreResult.Users]
+        });
+      }
+    })
+  }
+
+  
+  const handleScroll = (event: any) => {
+    // http://stackoverflow.com/questions/9439725/javascript-how-to-detect-if-browser-window-is-scrolled-to-bottom
+    const scrollTop = (document.documentElement && document.documentElement.scrollTop) || document.body.scrollTop;
+    const scrollHeight = (document.documentElement && document.documentElement.scrollHeight) || document.body.scrollHeight;
+    const clientHeight = document.documentElement.clientHeight || window.innerHeight;
+    const scrolledToBottom = Math.ceil(scrollTop + clientHeight) >= scrollHeight;
+
+    if (scrolledToBottom) {
+      fetchMoreData();
+    }
+  };
+
+  useEffect(() => {
+    window.addEventListener('scroll', handleScroll);
+    return () => window.removeEventListener('scroll', handleScroll);
+  })
+
+  
+
+
   return (
     <div>
       <h3>Users</h3>
@@ -53,7 +89,7 @@ export function UserList() {
                 <tr key={user.id}>
                   <td>{user.name}</td>
                   <td>{user.shortBio}</td>
-                  <td><img src={user.imageUrl} alt=""/></td>
+                  {/* <td><img src={user.imageUrl} alt=""/></td> */}
                 </tr>
               ))}
             </tbody>
