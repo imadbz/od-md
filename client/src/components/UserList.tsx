@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useQuery, gql } from '@apollo/client';
+import './UserList.css';
 
 interface User {
   id: number;
@@ -25,7 +26,7 @@ enum VerifiedStatus {
 
 const GET_ROCKET_INVENTORY = gql`
   query GetUsers($offset: Float, $search: String, $verified: Float) {
-    Users(take: 20, skip: $offset, search: $search, verified: $verified) {
+    Users(take: 10, skip: $offset, search: $search, verified: $verified) {
       id
       name
       shortBio
@@ -70,14 +71,6 @@ export function UserList() {
     }
   };
 
-  const handleSearchInputChange = (e: any) => {
-    setSearchString(e.target.value)
-  }
-
-  const handleVerifiedChange = (verified: VerifiedStatus) => {
-    setVerified(verified);
-  }
-
   useEffect(() => {
     window.addEventListener('scroll', handleScroll);
     return () => window.removeEventListener('scroll', handleScroll);
@@ -85,16 +78,29 @@ export function UserList() {
 
   useEffect(() => fetchData(true), [verified, searchString])
 
+  const verifiedOptions = [
+    {key: VerifiedStatus.ALL, name: 'All'},
+    {key: VerifiedStatus.VERIFIED, name: 'Verified only'},
+    {key: VerifiedStatus.NONVERIFIED, name: 'Non verified only'},
+  ]
 
   return (
-    <div>
-      <h3>Users</h3>
-      <input type="text" onChange={handleSearchInputChange}/>
-      <div>
-        <a onClick={() => handleVerifiedChange(VerifiedStatus.ALL)}>All</a>
-        <a onClick={() => handleVerifiedChange(VerifiedStatus.VERIFIED)}>Verified only</a>
-        <a onClick={() => handleVerifiedChange(VerifiedStatus.NONVERIFIED)}>Non verified only</a>
-      </div>
+    <div className="tableWrapper">
+      <header>
+        <h3>Users</h3>
+        <input type="text" placeholder='Search ...' onChange={(({target}) => setSearchString(target.value))}/>
+        <div className="filterVerified">
+          {verifiedOptions.map(op => 
+            <a
+              key={op.key}
+              className={op.key === verified ? 'active' : ''}
+              onClick={() => setVerified(op.key)}
+            >
+              {op.name}
+            </a>
+          )}
+        </div>
+      </header>
       {loading ? (
         <p>Loading ...</p>
       ) : (
@@ -107,11 +113,11 @@ export function UserList() {
               </tr>
             </thead>
             <tbody>
-              {data && data.Users.map(user => (
-                <tr key={user.id}>
+              {data && data.Users.map((user, index) => (
+                <tr key={index}>
                   <td>{user.name}</td>
                   <td>{user.shortBio}</td>
-                  {/* <td><img src={user.imageUrl} alt=""/></td> */}
+                  <td><img src={user.imageUrl} alt={user.name}/></td>
                 </tr>
               ))}
             </tbody>
