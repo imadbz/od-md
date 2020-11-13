@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useQuery, gql } from '@apollo/client';
 
 interface User {
@@ -18,8 +18,8 @@ interface UserVars {
 }
 
 const GET_ROCKET_INVENTORY = gql`
-  query GetUsers($offset: Float! = 0) {
-    Users(take: 20, skip: $offset) {
+  query GetUsers($offset: Float! = 0, $search: String) {
+    Users(take: 20, skip: $offset, search: $search) {
       id
       name
       shortBio
@@ -36,6 +36,8 @@ export function UserList() {
   );
 
   const fetchMoreData = () => {
+    if(searchString) return;
+
     fetchMore({
       variables: {
         offset: data?.Users.length
@@ -49,8 +51,19 @@ export function UserList() {
     })
   }
 
+  const search = (input: string) => {
+    fetchMore({
+      variables: {
+        search: input && `%${input}%`
+      },
+      updateQuery: (prev: UserData, { fetchMoreResult }) => {
+        return fetchMoreResult || {Users: []};
+      }
+    })
+  }
+
   
-  const handleScroll = (event: any) => {
+  const handleScroll = () => {
     // http://stackoverflow.com/questions/9439725/javascript-how-to-detect-if-browser-window-is-scrolled-to-bottom
     const scrollTop = (document.documentElement && document.documentElement.scrollTop) || document.body.scrollTop;
     const scrollHeight = (document.documentElement && document.documentElement.scrollHeight) || document.body.scrollHeight;
@@ -68,11 +81,17 @@ export function UserList() {
   })
 
   
+  const [searchString, setSearchString] = useState("");
 
+  const handleSearchInputChange = (e: any) => {
+    setSearchString(e.target.value)
+    search(e.target.value)
+  }
 
   return (
     <div>
       <h3>Users</h3>
+      <input type="text" onChange={handleSearchInputChange}/>
       {loading ? (
         <p>Loading ...</p>
       ) : (
